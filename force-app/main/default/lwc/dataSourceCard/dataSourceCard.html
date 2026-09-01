@@ -1,0 +1,44 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 12-22-2025
+  @last modified by  : Mouhamed NIANG
+-->
+<template> 
+    <!-- data source selector -->
+    <div class="card">
+      <!-- header content -->
+      <div class="header">
+        <div class={boxIconClass}>
+          <span class={headerIconClass}>{headerIconEmoji}</span>
+        </div>
+  
+        <div class="text-content">
+          <h3 class="title">{title}</h3>
+          <p class="subtitle">{subtitle}</p>
+        </div>
+      </div>
+      <!-- end header content-->
+  
+      <!-- Items content   -->
+      <div class="content">
+        <template for:each={contents} for:item="item">
+          <div class="support" key={item.Id}>
+            <span class="custom-icon-check">✓</span>
+  
+            <!-- text content -->
+            <p class="item">{item.Name}</p>
+            <!-- end text content -->
+          </div>
+        </template>
+        <!-- end Items content   -->
+  
+        <!-- action button  -->
+        <button class={buttonClass} onclick={handleNagivation}>
+          {textButton}
+        </button>
+        <!-- end action button  -->
+      </div>
+    </div> 
+  </template>

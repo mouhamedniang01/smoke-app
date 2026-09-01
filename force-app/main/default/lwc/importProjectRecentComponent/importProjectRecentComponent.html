@@ -1,0 +1,93 @@
+<!--
+  @description       :
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @last modified on  : 06-07-2026 (Aurora native HTML)
+-->
+<template>
+  <section class="cards" aria-label="Project options">
+    <a
+      class="card"
+      tabindex="0"
+      role="button"
+      aria-pressed="false"
+      onclick={handleShow}
+      aria-label="Create a new project"
+    >
+      <div class="header is-center">
+        <div class="icon-container" aria-hidden="true">
+          <span class="card-icon-emoji">＋</span>
+        </div>
+        <h3>Create New Project</h3>
+      </div>
+      <p>
+        Start with a new import project. Define your target object and project
+        settings.
+      </p>
+    </a>
+
+    <a
+      onclick={handleFindExistingProject}
+      class="card"
+      tabindex="0"
+      role="button"
+      aria-pressed="false"
+      aria-label="Select an existing project"
+    >
+      <div class="header is-center">
+        <span class="card-icon-emoji">📋</span>
+        <h3>Use Existing Project</h3>
+      </div>
+
+      <p>
+        Continue with a previously created project. Reuse your field mappings
+        and settings.
+      </p>
+    </a>
+  </section>
+
+  <section class="recent-projects-wrapper" aria-label="Recent Projects">
+    <div class="recent-title">Recent Projects</div>
+    <template if:true={hasNoProjects}>
+      <h3 class="empty slds-text-align_center">
+        <span style="margin-right: 10px">ℹ</span>
+        No project import yet, please add
+      </h3>
+    </template>
+
+    <template if:false={hasNoProjects}>
+      <div class="recent-projects">
+        <div class="project-item" tabindex="0">
+          <div class="main">
+            <template for:each={formattedProjects} for:item="pro">
+              <div class="project-item" key={pro.Id}>
+                <!-- Ligne 1 : Nom du projet -->
+                <span class="project-name">{pro.Name}</span>
+
+                <!-- Ligne 2 : Target + bouton -->
+                <div class="project-row">
+                  <span class="project-meta">
+                    Target Sobject : {pro.TargetObject__c}
+                  </span>
+                  <button
+                    data-id={pro.Id}
+                    class="btn-select"
+                    type="button"
+                    aria-label="Select this project"
+                    onclick={handleShowSelectProject}
+                  >
+                    Select this project
+                  </button>
+                </div>
+
+                <!-- Ligne 3 : Date de création -->
+                <small class="project-meta">
+                  Created : {pro.formattedCreatedDate}
+                </small>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+  </section>
+</template>

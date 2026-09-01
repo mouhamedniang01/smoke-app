@@ -1,0 +1,95 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 11-11-2025
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<template>
+  <div class="main-content">
+    <!-- Header -->
+    <div class="header">
+      <span class="plus-icons margin-icon">＋</span>
+
+      <div class="text-header">
+        <h1>New Project</h1>
+        <p class="subtitle">
+          Set up your data import project with target object and configuration
+        </p>
+      </div>
+    </div>
+
+    <!-- Card container -->
+    <section class="card">
+      <!-- Project Information -->
+      <div class="section-header">
+        <span class="icon-colors plus-icons">ℹ</span>
+        <h2>Project Information</h2>
+      </div>
+      <label class="custom-label name-label" for="project-name">
+        Project Name <span class="required">*</span>
+      </label>
+      <input id="project-name" class="rounded-input" type="text"
+        placeholder="Enter a descriptive project name (e.g., Q4 Contact Import)"
+        value={projectName} oninput={handleProjectNameChange} />
+      <p class="help-text">
+        Choose a clear, descriptive name for easy identification
+      </p>
+
+      <!--Description textarea -->
+      <label class="custom-label description-label" name="description">
+        Description
+      </label>
+      <textarea class="rounded-input" name="description" rows="3"
+        placeholder="Describe the purpose and scope of this import project..."
+        oninput={handleDescriptionChange}>{description}</textarea>
+      <p class="help-text">
+        Provide details about data source, business purpose, and expected
+        outcomes
+      </p>
+
+      <hr class="divider" />
+
+      <!-- Target Object Configuration -->
+      <div class="section-header" style="margin-top: 1.5rem">
+        <span class="icon-colors plus-icons">🎯</span>
+        <h2>Target Object Configuration</h2>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-item">
+          <label class="custom-label target-label" for="project-name">
+            Target Salesforce Object <span class="required">*</span>
+          </label>
+          <select class="rounded-input" onchange={handleTargetObjectChange}>
+            <template for:each={targetObjectOptionsWithSelected} for:item="o">
+              <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+            </template>
+          </select>
+          <p class="help-text">
+            Select the Salesforce object where data will be imported
+          </p>
+        </div>
+        <!--Import Operation-->
+        <div class="form-item">
+          <!--
+          <lightning-combobox
+            label="Import Operation"
+            value={importOperation}
+            options={importOptions}
+            required
+            onchange={handleImportOperationChange}
+          ></lightning-combobox>
+          <p class="help-text">Choose how the data should be processed</p>
+        -->
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <c-project-form-footer-component onsave={handleCreateProject}
+          oncancel={handleCancel}></c-project-form-footer-component>
+      </div>
+    </section>
+  </div>
+</template>

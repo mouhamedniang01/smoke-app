@@ -1,0 +1,229 @@
+<template>
+  <div class="fm-root">
+
+    <!-- Header -->
+    <div class="fm-header">
+      <div class="fm-title">
+        <h1 class="fm-heading">Mapping des champs</h1>
+        <p class="fm-subtitle">Associez les colonnes source aux champs Salesforce</p>
+        <template if:true={selectedProjectId}>
+          <div class="fm-meta">
+            <span class="fm-meta-pill">{currentProjectName}</span>
+          </div>
+        </template>
+      </div>
+      <div class="fm-actions">
+        <button type="button" class="btn btn-outline btn-sm" onclick={handleAutoMapClick}>⚡ Auto-Map</button>
+        <button type="button" class="btn btn-icon btn-sm" onclick={handleClearAllClick} title="Réinitialiser">↺</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick={handleSaveMapping}>💾 Enregistrer</button>
+      </div>
+    </div>
+
+    <!-- Two-column mapping grid -->
+    <div class="fm-grid">
+
+      <!-- Left: Source columns -->
+      <section class="fm-panel">
+        <div class="fm-panel__header">
+          <h2>Colonnes CSV</h2>
+          <span class="fm-count">{sourceList.length}</span>
+        </div>
+        <div class="fm-source-list">
+          <template if:true={hasSourceList}>
+            <template for:each={sourceList} for:item="item">
+              <div key={item.name} class={item.rowClass} draggable="true"
+                data-source={item.name} ondragstart={handleDragStart}>
+                <div class="fm-source-main">
+                  <span class="drag-handle">⣿⣿</span>
+                  <span class="source-name">{item.name}</span>
+                </div>
+                <template if:true={item.isMapped}>
+                  <span class="src-badge sb-mapped">✓ Mappé</span>
+                </template>
+                <template if:true={item.isUnmapped}>
+                  <span class="src-badge sb-unmapped">⚠ Non mappé</span>
+                </template>
+                <template if:true={item.isTransform}>
+                  <span class="src-badge sb-transform">◈ Transfo.</span>
+                </template>
+              </div>
+            </template>
+          </template>
+          <template if:false={hasSourceList}>
+            <p class="fm-empty">Aucune colonne source.</p>
+          </template>
+        </div>
+      </section>
+
+      <!-- Right: Target fields -->
+      <section class="fm-right">
+        <div class="fm-target-header">
+          <div class="title">
+            <h2>Champs Salesforce</h2>
+            <span class="fm-count obj-badge">{selectedTargetObject}</span>
+          </div>
+          <span class="set" onclick={openSettings}>
+            <span class="set-label">⚙ Paramètres</span>
+          </span>
+        </div>
+
+        <div class="fm-target-list">
+          <template for:each={targetFields} for:item="field">
+            <article key={field.apiName} class={field.cardClass}
+              data-target={field.apiName}
+              ondragover={handleDragOver}
+              ondrop={handleDrop}>
+
+              <div class="fm-target-top">
+                <!-- Icon + labels -->
+                <div class="left">
+                  <div class={field.iconCssClass}></div>
+                  <div class="labels">
+                    <div class="t-label">{field.label}</div>
+                    <div class="t-sub">{field.typeLabel}</div>
+                  </div>
+                </div>
+
+                <!-- Mapped chips -->
+                <template if:true={field.hasMappedSources}>
+                  <template for:each={field.mappedSources} for:item="ms">
+                    <div key={ms.key} class={ms.chipClass}>
+                      <span class="chip-text">{ms.sourceColumn}</span>
+                      <span class="chip-remove" data-source={ms.sourceColumn} onclick={handleRemoveMapping}>✕</span>
+                    </div>
+                  </template>
+                </template>
+
+                <!-- Select dropdown when unmapped -->
+                <template if:false={field.hasMappedSources}>
+                  <select class="target-select" data-target={field.apiName} onchange={handleSelectMap}>
+                    <template for:each={sourceColumnOptions} for:item="opt">
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    </template>
+                  </select>
+                </template>
+              </div>
+
+              <!-- Lookup configuration (shown when a chip is present and isLookup toggled) -->
+              <template if:true={field.hasMappedSources}>
+                <template for:each={field.mappedSources} for:item="ms">
+                  <div key={ms.key} class="lookup-block">
+                    <label class="lookup-check-label">
+                      <input type="checkbox" checked={ms.mapping.isLookup}
+                        data-source={ms.sourceColumn} onchange={handleLookupToggle} />
+                      Utiliser comme Lookup
+                    </label>
+
+                    <template if:true={ms.mapping.isLookup}>
+                      <div class="lookup-row">
+                        <div class="lookup-field">
+                          <label class="lookup-label">Objet Lookup</label>
+                          <select class="lookup-sel" data-source={ms.sourceColumn} onchange={handleLookupObjectChange}>
+                            <option value="">Sélectionner...</option>
+                            <template for:each={ms.lookupObjOpts} for:item="o">
+                              <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+                            </template>
+                          </select>
+                        </div>
+                        <div class="lookup-field">
+                          <label class="lookup-label">Champ de correspondance</label>
+                          <select class="lookup-sel" data-source={ms.sourceColumn} onchange={handleLookupFieldChange}>
+                            <option value="">Sélectionner...</option>
+                            <template for:each={ms.lookupFieldOpts} for:item="o">
+                              <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+                            </template>
+                          </select>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </template>
+
+            </article>
+          </template>
+        </div>
+      </section>
+    </div>
+
+    <!-- Summary bar -->
+    <div class="fm-summary">
+      <div class="sum-item">
+        <div class="dot dot-green"></div>
+        <span>{summaryMappedCount} mappés</span>
+      </div>
+      <div class="sum-item">
+        <div class="dot dot-amber"></div>
+        <span>{summarySkippedCount} non mappés</span>
+      </div>
+      <div class="sum-item">
+        <div class="dot dot-indigo"></div>
+        <span>{summaryWithTransformCount} avec transformation</span>
+      </div>
+    </div>
+
+    <!-- Data preview -->
+    <div class="fm-preview">
+      <div class="preview-head">
+        <span class="preview-title">Aperçu des données</span>
+        <span class="set" onclick={openSettings}><span class="set-label">⚙ Paramètres</span></span>
+      </div>
+      <div class="table-wrap">
+        <table class="prev-table">
+          <thead>
+            <tr>
+              <template if:true={hasMappedFields}>
+                <template for:each={mappedFields} for:item="f">
+                  <th key={f.apiName}>{f.label}</th>
+                </template>
+              </template>
+            </tr>
+          </thead>
+          <tbody>
+            <template if:true={hasClientPreview}>
+              <template for:each={clientPreviewRows} for:item="row">
+                <tr key={row._key}>
+                  <template for:each={row.cells} for:item="cell">
+                    <td key={cell.key}>{cell.value}</td>
+                  </template>
+                </tr>
+              </template>
+            </template>
+            <template if:false={hasClientPreview}>
+              <tr>
+                <td colspan={previewColspan} class="muted">Aucun aperçu disponible.</td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Footer navigation -->
+    <div class="fm-footer">
+      <button type="button" class="btn btn-outline" onclick={handleBackClick}>← Retour</button>
+      <button type="button" class="btn btn-primary" onclick={handleContinueClick} disabled={isContinueButtonDisabled}>Suivant →</button>
+    </div>
+
+  </div>
+
+  <!-- Settings modal -->
+  <template if:true={showSettingsModal}>
+    <section class="fm-modal-backdrop" role="presentation">
+      <div class="fm-modal" role="dialog" aria-modal="true" aria-label="Paramètres d'aperçu">
+        <header class="fm-modal__header">
+          <h2>Paramètres d'aperçu</h2>
+        </header>
+        <div class="fm-modal__body">
+          <label class="modal-label">Nombre de lignes d'aperçu</label>
+          <input type="number" class="modal-input" min="1" max="50"
+            value={settingsPreviewRowLimit} onchange={handleSettingsRowLimitChange} />
+        </div>
+        <footer class="fm-modal__footer">
+          <button type="button" class="btn btn-outline" onclick={handleSettingsCancel}>Annuler</button>
+          <button type="button" class="btn btn-primary" onclick={handleSettingsApply}>Appliquer</button>
+        </footer>
+      </div>
+    </section>
+  </template>
+</template>

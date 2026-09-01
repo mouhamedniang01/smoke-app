@@ -1,0 +1,23 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 10-27-2025
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<template>
+  <nav class="stepper" aria-label="Progress">
+    <template for:each={steps} for:item="step">
+      <div
+        key={step.number}
+        class={step.cssClass}
+        data-step={step.number}
+        aria-current={step.ariaCurrent}
+      >
+        <a class="step-circle">{step.number}</a>
+        <div class="step-label">{step.label}</div>
+        <div class="step-line" if:true={step.hasLine}></div>
+      </div>
+    </template>
+  </nav>
+</template>

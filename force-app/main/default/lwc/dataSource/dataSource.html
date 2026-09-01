@@ -1,0 +1,52 @@
+<template>
+  <div class="ds-page">
+    <div class="card">
+
+      <!-- Card header -->
+      <div class="card-header">
+        <div>
+          <div class="card-title">{label.title}</div>
+          <div class="card-sub">{label.subtitle}</div>
+        </div>
+        <template if:true={projectName}>
+          <span class="project-badge">{projectName}</span>
+        </template>
+      </div>
+
+      <!-- Source grid (prototype: .source-grid) -->
+      <div class="source-grid">
+
+        <!-- CSV Card (prototype: .source-card) -->
+        <div class="source-card" onclick={handleCSV}>
+          <div class="source-icon">📄</div>
+          <div class="source-title">{label.uploadTitle}</div>
+          <div class="source-desc">{label.uploadSubtitle}</div>
+          <div class="source-features">
+            <template for:each={uploadContents} for:item="item">
+              <div key={item.Id} class="source-feature">{item.Name}</div>
+            </template>
+          </div>
+        </div>
+
+        <!-- SOQL Card (prototype: .source-card) -->
+        <div class="source-card" onclick={handleSOQL}>
+          <div class="source-icon soql-icon">{soqlIconSymbol}</div>
+          <div class="source-title">{label.queryTitle}</div>
+          <div class="source-desc">{label.querySubTitle}</div>
+          <div class="source-features">
+            <template for:each={queryContents} for:item="item">
+              <div key={item.Id} class="source-feature">{item.Name}</div>
+            </template>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Card footer -->
+      <div class="card-footer">
+        <button class="btn btn-ghost" onclick={handleBackToProjectSetup}>← {label.back}</button>
+      </div>
+
+    </div>
+  </div>
+</template>

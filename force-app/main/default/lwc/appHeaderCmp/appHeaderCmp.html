@@ -1,0 +1,29 @@
+<template>
+  <header class="app-header">
+
+    <!-- Logo (prototype: .header-logo) -->
+    <div class="header-logo">
+      <div class="header-logo-mark">◈</div>
+      ImportMate
+    </div>
+
+    <div class="header-spacer"></div>
+
+    <!-- Navigation (prototype: .header-nav) -->
+    <nav class="header-nav">
+      <button class={dashboardClass} onclick={handleNavigation} data-page="dashboard">
+        Dashboard
+      </button>
+      <button class={newProjectClass} onclick={handleNavigation} data-page="projects">
+        Nouveau projet
+      </button>
+      <button class={historyClass} onclick={handleNavigation} data-page="history">
+        Historique
+      </button>
+    </nav>
+
+    <!-- Avatar — utilisateur Salesforce connecté -->
+    <button class="avatar" title={userFullName}>{userInitials}</button>
+
+  </header>
+</template>

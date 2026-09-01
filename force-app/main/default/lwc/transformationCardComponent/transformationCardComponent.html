@@ -1,0 +1,64 @@
+<!--
+  @description       :
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             :
+  @last modified on  : 02-04-2026
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<template>
+  <div class={cardClass}>
+    <!-- rule-header: icon + title + action buttons -->
+    <div class="rule-header">
+      <div class={iconBoxClass}>
+        <span class={headIconClass}>{iconName}</span>
+      </div>
+      <div class="rule-title">
+        {cardHeadTitle}
+        <template if:true={cardHeadSubtitle}>
+          <span>{cardHeadSubtitle}</span>
+        </template>
+      </div>
+      <template if:true={showActionButtons}>
+        <div class="rule-actions">
+          <div class="raction" onclick={handleEditTransformation} title="edit">✎</div>
+          <div class="raction del" onclick={handleDeleteTransformation} title="delete">✕</div>
+        </div>
+      </template>
+    </div>
+
+    <!-- rule-body: field/type/order metadata grid -->
+    <div class="rule-body">
+      <template if:true={targetField}>
+        <div>
+          <div class="rf-label">Field</div>
+          <div class="rf-value">{targetField}</div>
+        </div>
+      </template>
+      <template if:true={showRuleType}>
+        <div>
+          <div class="rf-label">Type</div>
+          <div class="rf-value">{ruleType}</div>
+        </div>
+      </template>
+      <template if:true={showOrder}>
+        <div>
+          <div class="rf-label">Order</div>
+          <div class="rf-value">{order}</div>
+        </div>
+      </template>
+      <template if:true={status}>
+        <div>
+          <div class="rf-label">Status</div>
+          <div class="rf-value"><span class={badgeClass}>{status}</span></div>
+        </div>
+      </template>
+    </div>
+
+    <!-- rule-preview: before/after example -->
+    <template if:true={showComparison}>
+      <div class="rule-preview">
+        <span class="rp-before">{dataComparison}</span>
+      </div>
+    </template>
+  </div>
+</template>

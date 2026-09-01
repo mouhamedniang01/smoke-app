@@ -1,0 +1,159 @@
+<!--
+  @description: c-scheduled-schedules avec INLINE EDIT (Aurora native HTML)
+  @author: mouhamed niang
+  @last modified: 06-07-2026
+-->
+<template>
+    <div class="card" aria-label="list of schedules with status">
+        <div class="spaced-content head-card" aria-label="header">
+            <h2 class="card-title">{labels.title}</h2>
+        </div>
+
+        <div class="footer-separator"></div>
+
+        <template if:true={hasSchedules}>
+            <div class="schedules-container">
+                <table role="grid" aria-label="Schedule Project Table">
+                    <tbody>
+                        <template for:each={scheduledInfosWithEditState} for:item="schedule">
+                            <tr key={schedule.id}>
+
+                                <!-- MODE READ -->
+                                <template if:false={schedule.isBeingEdited}>
+                                    <td>
+                                        <div class="project-cell">
+                                            <div class={schedule.boxIconClass} aria-label="box icon">
+                                                <span class={schedule.iconClass}>{schedule.iconStatusEmoji}</span>
+                                            </div>
+                                            <div class="project-info">
+                                                <div class="project-name">{schedule.title}</div>
+                                                <div class="project-sub">{schedule.subtitle}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class={schedule.badgeStatusClass}>{schedule.statusLabel}</span>
+                                    </td>
+                                    <td class="actions">
+                                        <!-- Pause/Resume : visible seulement si Pending ou Suspended -->
+                                        <template if:true={schedule.canToggle}>
+                                            <button type="button" class="action-icon-btn"
+                                                data-id={schedule.id} data-running={schedule.isRunning}
+                                                onclick={handleToggleStatus}
+                                                disabled={schedule.toggleBtnDisabled}
+                                                title="Toggle Status">
+                                                {schedule.iconActionEmoji}
+                                            </button>
+                                        </template>
+                                        <!-- Édition : désactivé si Completed ou InProgress -->
+                                        <button type="button" class="action-icon-btn" title="Edit"
+                                            data-id={schedule.id} onclick={handleEditClick}
+                                            disabled={schedule.editBtnDisabled}>✏</button>
+                                        <button type="button" class="action-icon-btn action-icon-btn--delete"
+                                            data-id={schedule.id} onclick={handleDeleteSchedule}
+                                            disabled={isLoading} title="Delete">🗑</button>
+                                    </td>
+                                </template>
+
+                                <!-- MODE EDIT -->
+                                <template if:true={schedule.isBeingEdited}>
+                                    <td colspan="3" class="edit-td">
+                                        <div class="edit-panel">
+
+                                            <!-- Header -->
+                                            <div class="edit-header">
+                                                <div class="edit-header-left">
+                                                    <div class="edit-header-icon">
+                                                        <span class="icon-white">✏</span>
+                                                    </div>
+                                                    <div>
+                                                        <div class="edit-header-title">{labels.editTitle}</div>
+                                                        <div class="edit-header-sub">{schedule.title}</div>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="edit-close" onclick={handleCancelEdit}
+                                                    disabled={isLoading} title="Close">✕</button>
+                                            </div>
+
+                                            <!-- Body -->
+                                            <div class="edit-body">
+
+                                                <!-- Frequency chips -->
+                                                <div class="field-group full-width">
+                                                    <label class="field-label">{labels.labelFrequency}</label>
+                                                    <div class="freq-chips">
+                                                        <template for:each={frequencyOptions} for:item="opt">
+                                                            <button key={opt.value} class={opt.chipClass}
+                                                                data-value={opt.value}
+                                                                onclick={handleFrequencyChipClick} disabled={isLoading}>
+                                                                {opt.label}
+                                                            </button>
+                                                        </template>
+                                                    </div>
+                                                    <template if:true={frequencyHasError}>
+                                                        <span class="form-error">{frequencyErrorMessage}</span>
+                                                    </template>
+                                                </div>
+
+                                                <!-- Next Run datetime -->
+                                                <div class="field-group full-width">
+                                                    <label class="field-label">{labels.labelNextRun}</label>
+                                                    <input
+                                                        type="datetime-local"
+                                                        class="rounded-input"
+                                                        value={editNextRun}
+                                                        onchange={handleNextRunNativeChange}
+                                                    />
+                                                    <template if:true={nextRunHasError}>
+                                                        <span class="form-error">{nextRunErrorMessage}</span>
+                                                    </template>
+                                                </div>
+
+                                            </div>
+
+                                            <!-- Info bar -->
+                                            <div class="edit-info-bar">
+                                                <span class="primary-icon">ℹ</span>
+                                                <span>{labels.editInfoBar}</span>
+                                            </div>
+
+                                            <!-- Footer -->
+                                            <div class="edit-footer">
+                                                <span class="edit-footer-id">ID: {schedule.scheduleId}</span>
+                                                <div class="edit-footer-actions">
+                                                    <button type="button" class="btn btn-secondary" onclick={handleCancelEdit}
+                                                        disabled={isLoading}>
+                                                        <span class="mr-2">✕</span>
+                                                        {labels.cancelBtn}
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary" onclick={handleSaveEdit}
+                                                        disabled={isSaveDisabled}>
+                                                        <span class="mr-2 icon-white">↻</span>
+                                                        {labels.labelRescheduleBtn}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </td>
+                                </template>
+
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <!-- No schedules -->
+        <template if:false={hasSchedules}>
+            <div class="no-schedules-container">
+                <span class="no-schedules-icon">📅</span>
+                <div class="is-centered">
+                    <p class="no-schedules-message">{noSchedulesMessage}</p>
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

@@ -1,0 +1,220 @@
+<template>
+  <div class="soql-builder">
+
+    <!-- Step tabs -->
+    <div class="soql-tabs">
+      <button class={tab1Class} data-step="1" onclick={handleGoStep}>1 · Objet</button>
+      <div class="soql-tab-sep">›</div>
+      <button class={tab2Class} data-step="2" onclick={handleGoStep}>2 · Champs</button>
+      <div class="soql-tab-sep">›</div>
+      <button class={tab3Class} data-step="3" onclick={handleGoStep}>3 · Filtres</button>
+      <div class="soql-tab-sep">›</div>
+      <button class={tab4Class} data-step="4" onclick={handleGoStep}>4 · Aperçu</button>
+      <div class="soql-spacer"></div>
+      <button class="soql-mode-btn" onclick={toggleSqlMode}>
+        <template if:true={sqlMode}>👁 Mode visuel</template>
+        <template if:false={sqlMode}>✎ Mode SQL</template>
+      </button>
+    </div>
+
+    <!-- Panel 1: Object selection -->
+    <template if:true={isStep1}>
+      <div class="soql-panel">
+        <div class="soql-panel-title">Choisissez un objet Salesforce</div>
+        <div class="soql-search-wrap">
+          <div class="soql-search-box">
+            <span class="soql-search-icon">🔍</span>
+            <input type="text" placeholder="Rechercher un objet..." value={objectSearchTerm} oninput={handleObjectSearch} />
+          </div>
+        </div>
+        <div class="soql-obj-grid">
+          <template for:each={filteredObjects} for:item="obj">
+            <button key={obj.label} class={obj.pillClass} data-name={obj.label} onclick={handleSelectObject}>{obj.display}</button>
+          </template>
+        </div>
+        <div class="soql-footer">
+          <button class="btn btn-primary btn-sm" data-step="2" onclick={handleGoStep}>Suivant · Choisir les champs →</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Panel 2: Field selection -->
+    <template if:true={isStep2}>
+      <div class="soql-panel">
+        <div class="soql-panel-title">Sélectionnez les champs à récupérer</div>
+        <div class="soql-fields-grid">
+          <!-- Available fields -->
+          <div>
+            <div class="soql-col-title">Champs disponibles · {selectedObject}</div>
+            <div class="soql-search-box soql-field-search">
+              <span class="soql-search-icon">🔍</span>
+              <input type="text" placeholder="Filtrer les champs..." value={fieldSearchTerm} oninput={handleFieldSearch} />
+            </div>
+            <div class="soql-field-list">
+              <template for:each={availableFields} for:item="f">
+                <div key={f.apiName} class={f.itemClass} data-api={f.apiName} onclick={toggleField}>
+                  <span class="sfi-type">{f.typeShort}</span>{f.label}
+                </div>
+              </template>
+            </div>
+          </div>
+          <!-- Selected fields -->
+          <div>
+            <div class="soql-col-title">Champs sélectionnés <span class="soql-count-badge">{selectedFieldsMeta.length}</span></div>
+            <div class="soql-field-list">
+              <template for:each={selectedFieldsMeta} for:item="f">
+                <div key={f.apiName} class="soql-sel-item">
+                  <span class="sel-grip">⣿</span>
+                  <span class="sfi-type">{f.typeShort}</span>
+                  <span class="sel-fname">{f.label}</span>
+                  <span class="sel-remove" data-api={f.apiName} onclick={toggleField}>✕</span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+        <div class="soql-footer">
+          <button class="btn btn-ghost btn-sm" data-step="1" onclick={handleGoStep}>← Retour</button>
+          <button class="btn btn-primary btn-sm" data-step="3" onclick={handleGoStep}>Suivant · Filtres →</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Panel 3: Filters -->
+    <template if:true={isStep3}>
+      <div class="soql-panel">
+        <div class="soql-panel-title">Conditions de filtre <span class="subtitle">(optionnel)</span></div>
+        <div class="soql-filters-list">
+          <template for:each={conditionsWithOptions} for:item="c" for:index="i">
+            <div key={c.id} class="soql-filter-row">
+              <template if:true={c.showJoiner}>
+                <select class="soql-logic-sel" data-idx={i} onchange={updateCondJoiner}>
+                  <template for:each={c.joinOpts} for:item="o">
+                    <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+                  </template>
+                </select>
+              </template>
+              <select class="soql-sel" data-idx={i} onchange={updateCondField}>
+                <template for:each={c.fieldOpts} for:item="o">
+                  <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+                </template>
+              </select>
+              <select class="soql-sel soql-sel-op" data-idx={i} onchange={updateCondOp}>
+                <template for:each={c.opOpts} for:item="o">
+                  <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+                </template>
+              </select>
+              <input class="soql-val-input" type="text" data-idx={i} value={c.value} placeholder="Valeur..." oninput={updateCondVal} />
+              <button class="soql-remove-row" data-idx={i} onclick={removeCondition}>✕</button>
+            </div>
+          </template>
+        </div>
+        <button class="soql-add-filter" onclick={addCondition}>＋ Ajouter une condition</button>
+        <div class="soql-options-row">
+          <div class="soql-option">
+            <label class="soql-opt-label">Limite de résultats</label>
+            <input class="soql-val-input soql-val-sm" type="number" value={limitRows} min="1" max="10000" onchange={handleLimitChange} />
+          </div>
+          <div class="soql-option soql-option-sort">
+            <label class="soql-opt-label">Trier par</label>
+            <div class="soql-sort-row">
+              <select class="soql-sel" onchange={handleOrderByChange}>
+                <template for:each={orderByFieldOptionsWithSelected} for:item="o">
+                  <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+                </template>
+              </select>
+              <select class="soql-sel soql-sel-dir" onchange={handleDirectionChange}>
+                <template for:each={directionOptionsWithSelected} for:item="o">
+                  <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+                </template>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="soql-footer">
+          <button class="btn btn-ghost btn-sm" data-step="2" onclick={handleGoStep}>← Retour</button>
+          <button class="btn btn-primary btn-sm" data-step="4" onclick={handleGoStep}>Aperçu des données →</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Panel 4: Preview -->
+    <template if:true={isStep4}>
+      <div class="soql-panel">
+        <div class="soql-panel-title">Aperçu des données</div>
+
+        <!-- Generated query -->
+        <div class="soql-query-box">
+          <div class="soql-query-header">
+            <span class="soql-query-label">Requête générée</span>
+            <button class="soql-copy-btn" onclick={copySoql}>📋 Copier</button>
+          </div>
+          <pre class="soql-query-code"><template for:each={soqlTokens} for:item="t"><span key={t.key} class={t.cls}>{t.text}</span></template></pre>
+        </div>
+
+        <!-- Preview table -->
+        <div class="soql-preview-wrap">
+          <div class="soql-preview-header">
+            <span class="soql-preview-count">{paginationInfo}</span>
+            <button class="btn btn-outline btn-sm" onclick={handlePreview}>↺ Rafraîchir</button>
+          </div>
+          <div class="h-scroll">
+            <table class="soql-preview-table">
+              <thead>
+                <tr>
+                  <template for:each={columns} for:item="c">
+                    <th key={c.key}>{c.label}</th>
+                  </template>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={paginatedRows} for:item="r">
+                  <tr key={r.id}>
+                    <template for:each={r.cells} for:item="cell">
+                      <td key={cell.key}>{cell.value}</td>
+                    </template>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination bar -->
+          <div class="pg-bar">
+            <button class="pg-arrow" onclick={handlePrevPage} disabled={isFirstPage}>←</button>
+            <template for:each={pageButtons} for:item="p">
+              <button key={p.key} class={p.btnClass} data-page={p.page} onclick={handleGoPage} disabled={p.isEllipsis}>{p.label}</button>
+            </template>
+            <button class="pg-arrow" onclick={handleNextPage} disabled={isLastPage}>→</button>
+          </div>
+        </div>
+
+        <div class="soql-footer">
+          <button class="btn btn-ghost btn-sm" data-step="3" onclick={handleGoStep}>← Retour</button>
+          <button class="btn btn-primary btn-sm" onclick={handleContinue} disabled={isContinueDisabled}>Utiliser ces données · Continuer →</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- SQL manual mode -->
+    <template if:true={isSqlMode}>
+      <div class="soql-panel">
+        <div class="soql-panel-title">Mode SQL — Requête manuelle</div>
+        <textarea class="soql-manual-editor" spellcheck="false" onchange={handleManualSoqlChange}></textarea>
+        <div class="soql-footer">
+          <button class="btn btn-outline btn-sm" onclick={toggleSqlMode}>↩ Mode visuel</button>
+          <button class="btn btn-primary btn-sm" onclick={runManualPreview}>▶ Exécuter l'aperçu</button>
+        </div>
+      </div>
+    </template>
+
+  </div>
+
+  <template if:true={isLoading}>
+    <div class="spinner-overlay">
+      <div class="soql-spinner"></div>
+    </div>
+  </template>
+
+  <c-backbutton onback={handleBackToMain}></c-backbutton>
+</template>

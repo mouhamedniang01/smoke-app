@@ -1,0 +1,60 @@
+<template>
+  <div class="mp-shell">
+    <template if:true={isLoading}>
+      <div class="mp-spinner-wrap">
+        <div class="aurora-spinner"></div>
+      </div>
+    </template>
+
+    <p class="mp-meta">
+      Project: <strong>{projectId}</strong> &nbsp;•&nbsp; Version:
+      <strong>{version}</strong>
+      <template if:true={objectApiName}>
+        &nbsp;•&nbsp; Object: <strong>{objectApiName}</strong>
+      </template>
+    </p>
+
+    <template if:true={error}>
+      <div class="mp-error">{error}</div>
+    </template>
+
+    <template if:true={hasRows}>
+      <div class="mp-table-wrap">
+        <table class="mp-table">
+          <thead>
+            <tr>
+              <th>Source Column</th>
+              <th>Target Field</th>
+              <th>Lookup?</th>
+              <th>Lookup Object</th>
+              <th>Match Field</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template for:each={rows} for:item="r">
+              <tr key={r.id}>
+                <td>{r.sourceColumn}</td>
+                <td>{r.targetField}</td>
+                <td>{r.isLookup}</td>
+                <td>{r.lookupObject}</td>
+                <td>{r.lookupMatchField}</td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </template>
+
+    <template if:false={hasRows}>
+      <div class="mp-empty">
+        No mappings found for this Project/Version.
+      </div>
+    </template>
+
+    <div class="mp-footer">
+      <button type="button" class="btn btn-secondary" onclick={handleBack}>
+        ← Back to mapping
+      </button>
+    </div>
+  </div>
+</template>

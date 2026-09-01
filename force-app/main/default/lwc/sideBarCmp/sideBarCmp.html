@@ -1,0 +1,68 @@
+<!--
+    @Last Modification : 30/03/2026
+    @Modification : Mouhamed NIANG
+-->
+<template>
+    <div class="sidebar-container">
+        <!-- Project Header -->
+        <template if:true={projectName}>
+            <div class="project-header">
+                <h2 class="project-name">
+                    {projectName}
+                    <button type="button" class="edit-project-btn" onclick={navigateToProjectPage} title="Edit Project">✏</button>
+                </h2>
+            </div>
+        </template>
+        <!-- Steps -->
+        <div class="sidebar-content">
+            <nav class="workflow-nav">
+                <template for:each={steps} for:item="step">
+                    <div key={step.number} class={step.cssClass} data-step={step.number} onclick={handleStepClick}>
+                        <div class="step-indicator">
+                            <template if:true={step.isCompleted}>
+                                <span class="step-number step-check">✓</span>
+                            </template>
+                            <template if:false={step.isCompleted}>
+                                <span class="step-number">{step.number}</span>
+                            </template>
+                        </div>
+                        <span class="step-label">{step.label}</span>
+                    </div>
+                </template>
+            </nav>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions-section">
+                <h3 class="quick-actions-title">{labels.title}</h3>
+                <div class="quick-actions-list">
+                    <template for:each={quickActions} for:item="action">
+                        <button key={action.label} class="quick-action-btn" onclick={handleQuickAction}
+                            data-action={action.label}>
+                            <span class="action-icon-emoji">{action.iconEmoji}</span>
+                            <span class="action-label">{action.label}</span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Details -->
+        <template if:true={showProjectDetails}>
+            <div class="project-details">
+                <h3 class="project-details-title">Project Details</h3>
+                <div class="project-detail-item">
+                    <span class="detail-label">Target Object:</span>
+                    <span class="detail-value">{targetObject}</span>
+                </div>
+                <div class="project-detail-item">
+                    <span class="detail-label">Total Records:</span>
+                    <span class="detail-value">{totalRecords}</span>
+                </div>
+                <div class="project-detail-item">
+                    <span class="detail-label">Mapped Fields:</span>
+                    <span class="detail-value">{mappedFields}</span>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

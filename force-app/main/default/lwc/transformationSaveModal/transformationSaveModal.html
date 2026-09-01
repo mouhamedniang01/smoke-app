@@ -1,0 +1,119 @@
+<!--
+   @description       : TransformationSaveModal with Custom Labels
+   @author            : Mouhamed NIANG
+   @last modified on  : 02-24-2026
+-->
+<template>
+   <lightning-modal-header label={modalLabel}></lightning-modal-header>
+   <lightning-modal-body>
+      <div class="slds-form slds-form_stacked">
+
+         <div class="section-header">
+            <span class="section-icon">🗂</span>
+            <h2>{labels.sectionMapping}</h2>
+         </div>
+
+         <div class="form-row">
+            <div class="form-control">
+               <label class="slds-form-element__label" for="sourceColumnInput">
+                  {labels.sourceColumn}<abbr class="slds-required" title="required">*</abbr>
+               </label>
+               <div class="slds-form-element__control">
+                  <input id="sourceColumnInput" type="text" class="rounded-input" value={source} disabled />
+               </div>
+            </div>
+            <div class="form-control">
+               <label class="slds-form-element__label" for="targetFieldInput">
+                  {labels.targetField}<abbr class="slds-required" title="required">*</abbr>
+               </label>
+               <div class="slds-form-element__control">
+                  <input id="targetFieldInput" type="text" class="rounded-input" value={target} disabled />
+               </div>
+            </div>
+         </div>
+
+         <div class="section-header">
+            <span class="section-icon">⚙</span>
+            <h2>{labels.sectionRules}</h2>
+         </div>
+
+         <div class="slds-form-element">
+            <label class="slds-form-element__label" for="ruleType">
+               {labels.ruleType} <abbr class="slds-required" title="required">*</abbr>
+            </label>
+            <div class="slds-form-element__control">
+               <select id="ruleType" class="rounded-input" onchange={handleRuleTypeChange}>
+                  <option value="">{labels.selectOption}</option>
+                  <template for:each={ruleTypeOptionsWithSelected} for:item="opt">
+                     <option key={opt.value} value={opt.value} selected={opt.isSelected}>{opt.label}</option>
+                  </template>
+               </select>
+            </div>
+         </div>
+
+         <template if:true={showConcatenationFields}>
+            <div class="slds-form-element slds-m-bottom_medium">
+               <label class="slds-form-element__label" for="sourceFields">
+                  {labels.sourceFields} <abbr class="slds-required" title="required">*</abbr>
+               </label>
+               <div class="slds-form-element__control">
+                  <select id="sourceFields" class="rounded-input dual-listbox" size="6" multiple onchange={handleTargetFieldsChange}>
+                     <template for:each={targetFieldOptionsWithSelected} for:item="opt">
+                        <option key={opt.value} value={opt.value} selected={opt.isSelected}>{opt.label}</option>
+                     </template>
+                  </select>
+               </div>
+               <div class="slds-form-element__help">
+                  {labels.selectFieldsHelp} {selectedFieldsCount} {labels.onLabel} 3 {labels.selectedLabel}
+               </div>
+            </div>
+            <div class="slds-form-element slds-m-bottom_medium">
+               <label class="slds-form-element__label" for="separator">
+                  {labels.separator}
+               </label>
+               <div class="slds-form-element__control">
+                  <select id="separator" class="rounded-input" onchange={handleSeparatorChange}>
+                     <option value="">{labels.selectOption}</option>
+                     <template for:each={separatorOptionsWithSelected} for:item="opt">
+                        <option key={opt.value} value={opt.value} selected={opt.isSelected}>{opt.label}</option>
+                     </template>
+                  </select>
+               </div>
+            </div>
+         </template>
+
+         <template if:true={isBooleanTransformation}>
+            <div class="slds-form-element slds-m-bottom_medium">
+               <div class="slds-form-element__control">
+                  <label class="slds-form-element__label">
+                     {labels.chooseBooleanValue} <abbr class="slds-required" title="required">*</abbr>
+                  </label>
+                  <label class="toggle-label">
+                     <input type="checkbox" checked={booleanValue} onchange={handleBooleanValueChange} />
+                     <span class="toggle-text">{labels.booleanValueLabel}</span>
+                     <span class="toggle-hint">({booleanDisplayLabel})</span>
+                  </label>
+               </div>
+            </div>
+         </template>
+
+      </div>
+   </lightning-modal-body>
+   <lightning-modal-footer>
+      <div class="btns">
+         <button aria-label="Cancel" onclick={handleCancel} class="btn btn-secondary">
+            <label>{labels.cancel}</label>
+         </button>
+         <template if:true={isEditMode}>
+            <button class="btn btn-primary" onclick={handleUpdateRule}>
+               <label>{labels.updateRule}</label>
+            </button>
+         </template>
+         <template if:false={isEditMode}>
+            <button class="btn btn-primary" onclick={handleSaveTransformation}>
+               <label>{labels.saveRule}</label>
+            </button>
+         </template>
+      </div>
+   </lightning-modal-footer>
+</template>

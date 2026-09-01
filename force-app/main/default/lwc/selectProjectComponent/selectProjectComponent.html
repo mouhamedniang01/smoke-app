@@ -1,0 +1,65 @@
+<!--
+  @description       : Modal de sélection de projet (Aurora native HTML)
+  @last modified on  : 06-07-2026
+-->
+<template>
+  <lightning-modal-header label={title}></lightning-modal-header>
+
+  <lightning-modal-body>
+    <template if:true={hasNoProjects}>
+      <h3 class="empty slds-text-align_center">
+        <span style="margin-right:10px">ℹ</span>
+        No project import yet, please add
+      </h3>
+    </template>
+
+    <template if:false={hasNoProjects}>
+      <div class="spm-body">
+        <!-- Search -->
+        <div class="spm-search-wrap">
+          <input
+            type="search"
+            class="rounded-input spm-search"
+            placeholder="Search import project..."
+            onchange={handleSearch}
+          />
+        </div>
+
+        <!-- Projects table -->
+        <template if:true={projects}>
+          <div class="spm-table-wrap">
+            <table class="styled-table">
+              <caption>Import projects Informations</caption>
+              <thead>
+                <tr>
+                  <template for:each={columns} for:item="column">
+                    <th key={column.fieldName}>{column.label}</th>
+                  </template>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={projects} for:item="project">
+                  <tr key={project.Id} class="all">
+                    <td class="projectName">{project.Name}</td>
+                    <td class="data">{project.TargetObject__c}</td>
+                    <td class="data">{project.Description__c}</td>
+                    <td class="data">
+                      <button type="button" class="btn btn-primary btn-sm"
+                        data-id={project.Id} onclick={handleShowDetailProject}>
+                        Select
+                      </button>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </template>
+      </div>
+    </template>
+  </lightning-modal-body>
+
+  <lightning-modal-footer>
+    <button type="button" class="btn btn-secondary" onclick={handleCloseModal}>Close</button>
+  </lightning-modal-footer>
+</template>

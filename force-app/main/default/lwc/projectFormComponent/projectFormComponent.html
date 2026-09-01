@@ -1,0 +1,68 @@
+<!--
+  @description: Project form — Aurora Step 1 design
+-->
+<template>
+  <div class={containerClass}>
+    <div class={contentClass}>
+
+      <!-- Card header — création uniquement -->
+      <template if:false={openModal}>
+        <div class="card-header">
+          <div>
+            <div class="card-title">{label.projectInfoLabel}</div>
+            <div class="card-sub">{label.projectDetailsLabel}</div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Nom du projet -->
+      <div class="form-group">
+        <label class="form-label">
+          {label.projectNameLabel} <span class="req">*</span>
+        </label>
+        <input
+          type="text"
+          class="form-input"
+          placeholder={projectNamePlaceholder}
+          value={projectName}
+          oninput={handleProjectNameChange}
+        />
+      </div>
+
+      <!-- Objet Salesforce cible -->
+      <div class="form-group">
+        <label class="form-label">
+          {label.targetObjectLabel} <span class="req">*</span>
+        </label>
+        <select class="form-input" onchange={handleTargetObjectChange}>
+          <option value="" disabled selected={isNoTargetSelected}>Choisir un objet Salesforce...</option>
+          <template for:each={targetObjectOptionsWithSelected} for:item="o">
+            <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+          </template>
+        </select>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label">
+          {label.descriptionLabel} <span class="optional">(optionnel)</span>
+        </label>
+        <textarea
+          class="form-input form-textarea"
+          placeholder={descriptionPlaceholder}
+          oninput={handleDescriptionChange}
+          rows="3"
+        >{description}</textarea>
+      </div>
+
+      <!-- Footer -->
+      <div class="card-footer">
+        <button type="button" class="btn btn-ghost" onclick={handleCancel}>Annuler</button>
+        <button type="button" class="btn btn-primary" onclick={handleCreateProject}>
+          Enregistrer →
+        </button>
+      </div>
+
+    </div>
+  </div>
+</template>

@@ -1,0 +1,83 @@
+/* ══ Aurora design tokens ══ */
+:host {
+  display: block;
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  --indigo:        #4F46E5;
+  --indigo-soft:   rgba(79,70,229,0.08);
+  --indigo-glow:   rgba(79,70,229,0.25);
+  --violet:        #7C3AED;
+  --grad-brand:    linear-gradient(135deg,#4F46E5 0%,#7C3AED 100%);
+  --radius-sm:     10px;
+  --radius-pill:   999px;
+  --ease-in-out:   cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ══ Header (prototype: .header) ══ */
+.app-header {
+  height: 62px;
+  flex-shrink: 0;
+  background: rgba(15,23,42,0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center;
+  padding: 0 28px; gap: 12px;
+  z-index: 200;
+}
+
+/* ══ Logo (prototype: .header-logo + .header-logo-mark) ══ */
+.header-logo {
+  display: flex; align-items: center; gap: 10px;
+  color: #fff; font-weight: 800; font-size: 1.05rem;
+  letter-spacing: -0.5px; flex-shrink: 0;
+}
+
+.header-logo-mark {
+  width: 30px; height: 30px;
+  background: var(--grad-brand);
+  border-radius: 8px;
+  display: grid; place-items: center;
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba(79,70,229,0.5);
+}
+
+/* ══ Spacer (prototype: .header-spacer) ══ */
+.header-spacer { flex: 1; }
+
+/* ══ Navigation (prototype: .header-nav) ══ */
+.header-nav { display: flex; align-items: center; gap: 2px; }
+
+.header-nav button {
+  color: rgba(255,255,255,0.55);
+  font-size: .82rem; font-weight: 500;
+  background: transparent; border: none;
+  padding: 6px 13px;
+  border-radius: var(--radius-sm);
+  cursor: pointer; font-family: inherit;
+  transition: all .15s var(--ease-in-out);
+  letter-spacing: -0.1px;
+}
+.header-nav button:hover {
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.07);
+}
+.header-nav button.active {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+
+/* ══ Avatar (prototype: .avatar) ══ */
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: var(--radius-pill);
+  background: var(--grad-brand);
+  color: #fff; font-weight: 700; font-size: .78rem;
+  display: grid; place-items: center;
+  cursor: pointer; margin-left: 10px; flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.15), 0 4px 12px rgba(79,70,229,0.35);
+  transition: transform .15s;
+  border: none; padding: 0; font-family: inherit;
+  letter-spacing: .5px;
+}
+.avatar:hover { transform: scale(1.05); }

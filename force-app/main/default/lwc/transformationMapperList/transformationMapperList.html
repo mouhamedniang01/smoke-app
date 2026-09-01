@@ -1,0 +1,189 @@
+<!--
+  @description       : TransformationMapperList - HTML template with Custom Labels integration
+  @author            : Mouhamed NIANG
+  @last modified on  : 02-24-2026
+-->
+<template>
+  <div>
+    <!-- Loading State -->
+    <template if:true={isLoading}>
+      <div class="card">
+        <div class="ml-loading">
+          <div class="ml-spinner"></div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Error State -->
+    <template if:true={error}>
+      <div class="card ml-error">
+        <strong>{labels.errorTitle}:</strong> {error}
+      </div>
+    </template>
+
+    <!-- Mappings Table -->
+    <template if:true={hasMappings}>
+      <div class="card">
+        <div class="toolbar">
+          <div class="toolbar__left">
+            <div class="card__title">{labels.availableMappings}</div>
+            <span class="badge badge--green">{badgeText}</span>
+          </div>
+          <div class="toolbar__right">
+            <div class="search">
+              <span class="search__icon">🔍</span>
+              <input
+                class="search__input"
+                type="search"
+                placeholder={labels.searchMappings}
+                value={searchTerm}
+                oninput={handleSearchChange}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-scroll">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>
+                    <button
+                      class="th-btn"
+                      data-field="sourceColumn"
+                      onclick={handleHeaderClick}
+                    >
+                      <span>{labels.sourceColumn}</span>
+                      <template if:true={sortFields.sourceColumn.isSorted}>
+                        <span class="sort-caret">
+                          <template if:true={sortFields.sourceColumn.sortAsc}>▲</template>
+                          <template if:false={sortFields.sourceColumn.sortAsc}>▼</template>
+                        </span>
+                      </template>
+                    </button>
+                  </th>
+                  <th>
+                    <button
+                      class="th-btn"
+                      data-field="targetField"
+                      onclick={handleHeaderClick}
+                    >
+                      <span>{labels.targetField}</span>
+                      <template if:true={sortFields.targetField.isSorted}>
+                        <span class="sort-caret">
+                          <template if:true={sortFields.targetField.sortAsc}>▲</template>
+                          <template if:false={sortFields.targetField.sortAsc}>▼</template>
+                        </span>
+                      </template>
+                    </button>
+                  </th>
+                  <th>{labels.version}</th>
+                  <th>{labels.type}</th>
+                  <th>{labels.lookupDetails}</th>
+                  <th class="col-actions">{labels.actions}</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <template for:each={pagedMappings} for:item="mapping">
+                  <tr key={mapping.id}>
+                    <td>
+                      <strong>{mapping.sourceColumn}</strong>
+                    </td>
+                    <td>
+                      <span class="tag">{mapping.targetField}</span>
+                    </td>
+                    <td>{mapping.version}</td>
+                    <td>
+                      <template if:true={mapping.isLookup}>
+                        <span class="pill pill--green">Lookup</span>
+                      </template>
+                    </td>
+                    <td>
+                      <template if:true={mapping.isLookup}>
+                        <div class="slds-text-body_small slds-text-color_weak">
+                          <div><strong>Object:</strong> {mapping.lookupObject}</div>
+                          <div><strong>Match:</strong> {mapping.lookupMatchField}</div>
+                        </div>
+                      </template>
+                      <template if:false={mapping.isLookup}>
+                        <span class="slds-text-color_weak" style="text-align: center;">—</span>
+                      </template>
+                    </td>
+                    <td class="actions-cell">
+                      <button
+                        type="button"
+                        class="btn btn--primary"
+                        data-mapping-id={mapping.id}
+                        onclick={handleTransformation}
+                      >＋ {labels.addRule}</button>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="table-footer">
+            <div class="table-footer__left">
+              {showingEntriesText}
+            </div>
+            <div class="table-footer__right pager">
+              <button
+                type="button"
+                class="pager__btn"
+                onclick={gotoPrev}
+                disabled={isFirstPage}
+              >← {labels.previous}</button>
+
+              <template for:each={pageNumbers} for:item="p">
+                <span key={p.key}>
+                  <template if:true={p.isEllipsis}>
+                    <span class="pager__ellipsis">{p.label}</span>
+                  </template>
+                  <template if:false={p.isEllipsis}>
+                    <template if:true={p.isActive}>
+                      <button type="button" class="pager__page pager__page--active">
+                        {p.label}
+                      </button>
+                    </template>
+                    <template if:false={p.isActive}>
+                      <button
+                        type="button"
+                        class="pager__page"
+                        data-page={p.page}
+                        onclick={gotoPage}
+                      >
+                        {p.label}
+                      </button>
+                    </template>
+                  </template>
+                </span>
+              </template>
+
+              <button
+                type="button"
+                class="pager__btn"
+                onclick={gotoNext}
+                disabled={isLastPage}
+              >{labels.next} →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Empty State -->
+    <template if:true={isEmpty}>
+      <div class="card empty-state-card">
+        <div class="empty-state">
+          <div class="empty-state-icon">▤</div>
+          <h3 class="empty-state-title">No Mappings Found</h3>
+          <p class="empty-state-sub">Create field mappings to configure transformations</p>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

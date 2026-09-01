@@ -1,0 +1,213 @@
+/**
+ * @description       : 
+ * @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+ * @group             : 
+ * @last modified on  : 30-03-2026
+ * @last modified by  : Remove shadow filter teste
+**/
+@isTest
+public with sharing class ScheduleRepositoryTest {
+   
+    @TestSetup
+    static void setupTestData(){
+       User admin = TestDataFactory.createAdminUser();     
+           String expected ='Test';
+            String frequence =String.valueOf(ImportMateEnum.FrequencyEnum.MONTHLY);
+            ImportProject__c project = TestDataFactory.createImportProject();
+             
+              Schedule__c schedule = new Schedule__c(
+                    Frequency__c = frequence,
+                    NextRun__c = Date.today().addDays(-1),
+                    Project__c = project.Id
+                );
+                insert schedule; 
+    }
+
+    
+    @IsTest
+    static void testGetPastSchedules() {
+        //given
+         Schedule__c savedSchedule = TestDataFactory.createSchedule();
+
+        //when
+        Test.startTest();
+           List<Schedule__c> schedules = ScheduleRepository.getPastSchedules();
+        Test.stopTest();
+        //then
+        Assert.isNotNull(schedules, 'La liste de planification ne doît pas être null');
+        
+    }
+    //Tester la récupération de toutes les planifications
+     @IsTest
+     static void testGetAllSchedule() {
+        //GIVEN 
+         Schedule__c savedSchedule = TestDataFactory.createSchedule();
+         ImportProject__c project = [
+            SELECT Id FROM ImportProject__c LIMIT 1
+         ];
+
+
+        //WHEN
+        Test.startTest();
+            List<Schedule__c> results = ScheduleRepository.getSchedulesByprojectId(String.valueOf(Project.Id));
+        Test.stopTest();
+
+        //Then - Assertions
+        Assert.isTrue(results.size() > 0,'Schedule\'s is not empty');
+        Assert.isNotNull(results, 'list is not null');
+     }
+
+    //Tester la récupération de planification par l'id du schedule
+     @IsTest
+     static void testGetScheduleById() {
+        //GIVEN
+        Schedule__c savedSchedule = TestDataFactory.createSchedule();
+
+        //When 
+        Test.startTest();
+         Schedule__c result =  ScheduleRepository.getScheduleById(savedSchedule.Id);        
+        Test.stopTest();
+
+        //Then
+        Assert.isNotNull(result, 'find a schedule success');    
+     }
+
+      //Tester la suppression de tâches par le nom de la planification
+    //  suppression avec ID null cas de test négatif
+    @IsTest
+    static void testDeleteScheduleByIdNull() {
+        Test.startTest();
+        try {
+            ScheduleService.deleteScheduleById(null);
+        } catch (Exception e) {
+            Assert.isTrue(String.isNotBlank(e.getMessage()));
+        }
+        Test.stopTest();
+    }
+
+     static void testDeleteScheduleById() {
+        Schedule__c schedule = TestDataFactory.createSchedule();
+
+        String scheduleId = String.valueOf(schedule.Id);
+        ScheduleRepository.deleteScheduleById(scheduleId);
+        Test.startTest();
+        List<Schedule__c> schedules = [
+            SELECT Id, Name 
+            FROM Schedule__c
+            WHERE Id = :scheduleId
+        ];
+        Test.stopTest();
+
+        Assert.isFalse( schedules.size() > 0, 'Schedule shouldn\'t  be find after deleted!');
+    }
+     
+    
+
+    //Tester la récupération de planification par le nom du projet
+    @IsTest
+     static void testGetScheduleByProjectName() {
+        //GIVEN
+         Schedule__c savedSchedule = TestDataFactory.createSchedule();
+         String expected = 'Test Project';
+
+        //When 
+        Test.startTest();
+         List<ScheduleService.ScheduleWrapper> result =  ScheduleRepository.getSchedulesByProjectName(expected);        
+        Test.stopTest();
+
+        //Then - Assertions
+        Assert.isNotNull(result, 'find a schedule success');     
+     }
+
+        //Tester l'enregistrement d'une nouvelle plabification 
+      @IsTest
+     static void testAddSchedule() {  
+              //Given  
+            String expected ='Test Project';
+            String frequence =String.valueOf(ImportMateEnum.FrequencyEnum.MONTHLY);
+            ImportProject__c project = TestDataFactory.createImportProject();
+
+              Schedule__c schedule = new Schedule__c(
+                    Frequency__c = frequence,
+                    NextRun__c = Datetime.now(),
+                    Project__c = project.Id
+                );
+                ScheduleRepository.addSchedule(schedule); 
+            //When 
+            Test.startTest();
+
+                List<Schedule__c> result  = [
+                    SELECT Id, Name, NextRun__c,Project__r.Id, 
+                    Frequency__c ,Project__r.Name
+                    FROM Schedule__c
+                    WHERE Project__r.Id = : project.Id 
+                    AND Frequency__c = :frequence
+                ];
+                  
+            Test.stopTest();
+               
+            //Then - Assertions
+         Assert.isNotNull(result, 'find a schedule success');   
+           
+         Assert.areEqual(expected, result[0].Project__r.Name,'Values matched');
+    }     
+
+    @IsTest
+    static void testGetSchedulesWithExecutions(){ 
+            //When 
+            Test.startTest();
+            
+            ImportExecution__c execution =  TestDataFactory.createImportExecution();
+
+            Schedule__c schedule = TestDataFactory.createSchedule(); 
+
+            ImportProject__c project = [SELECT Id FROM ImportProject__c LIMIT 1];
+      
+            List<ScheduleService.ScheduleWrapper> results = ScheduleRepository.getSchedulesWithExecutionsByprojectId(project.id);
+
+            Test.stopTest();
+
+            //then
+            Assert.isFalse(results.size() < 0 ,'list should\'t be empty!  ');
+            
+    }
+
+    @IsTest
+    static void testGetSchedulesWithEexcutionStatus(){ 
+          
+            Test.startTest();
+            //given
+            String status = 'Pending';
+            //when
+            ImportProject__c project = TestDataFactory.createImportProject();
+      
+            
+            ImportExecution__c execution =  TestDataFactory.createImportExecution(project.Id);
+
+            Schedule__c schedule = TestDataFactory.createSchedule(); 
+
+         
+            List<ScheduleService.ScheduleWrapper> results = ScheduleRepository.getSchedulesByExecutionStatusAndprojectId(status, String.valueOf(project.id));
+                
+            Test.stopTest();
+
+            //then
+            Assert.isFalse(results.size() < 0 ,'list should\'t be empty!  ');
+          //  Assert.areEqual(status,results[0].importExecutions[0].Status__c,'Should not be false ');
+            
+    }
+ 
+    @isTest
+    static void testGetExecutionsByProject_WithStatus() {
+        ImportProject__c proj = [SELECT Id FROM ImportProject__c LIMIT 1];
+        
+        Test.startTest();
+        // Cas nominal : Filtrer par statut 'Completed'
+         List<ScheduleService.ScheduleWrapper> result = 
+            ScheduleRepository.getSchedulesWithExecutionsByprojectId(proj.Id);
+        Test.stopTest();
+
+        Assert.isTrue(result.size()> 0,'Scheduled linked should not be empty'); 
+    }
+
+}

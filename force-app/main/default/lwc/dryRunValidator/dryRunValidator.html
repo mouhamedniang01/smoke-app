@@ -1,0 +1,368 @@
+<template>
+  <div class="validation-container">
+
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+
+        <!-- Left: title + status badge + subtitle -->
+        <div class="header-info">
+          <div class="header-title-row">
+            <h1 class="header-title">{labels.title}</h1>
+            <template if:true={validationExecuted}>
+              <template if:true={hasErrors}>
+                <span class="error-status-badge">✕ {labels.statusWithErrors}</span>
+              </template>
+              <template if:false={hasErrors}>
+                <span class="error-status-badge success-badge">✓ {labels.statusSuccess}</span>
+              </template>
+            </template>
+          </div>
+          <p class="header-subtitle">{labels.subtitle}</p>
+          <span class="badge primary-badge">{projectName}</span>
+          <template if:true={precheck.totalRows}>
+            <p class="precheck-line">
+              Precheck: {precheck.totalRows} row(s) &nbsp;·&nbsp;
+              {precheck.emptyRows} empty &nbsp;·&nbsp;
+              {precheck.invalidRows} invalid
+            </p>
+          </template>
+        </div>
+
+        <!-- Right: actions row -->
+        <div class="header-actions-row">
+          <button type="button" class="btn btn-icon btn-sm" onclick={openSettings} disabled={isLoading} title={labels.btnSettings}>⚙</button>
+
+          <label class="keep-valid-rows-toggle">
+            <input type="checkbox" checked={settings.keepValidRows} onchange={handleKeepValidRowsChange} disabled={isLoading} />
+            <span>{labels.settingsKeepValidRows}</span>
+          </label>
+
+          <button type="button" class="btn btn-primary" onclick={runDryRun} disabled={isDryRunDisabled}>▶ {labels.btnRun}</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick={exportErrors} disabled={isExportDisabled}>📤 {labels.btnExport}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="statistics-grid">
+      <div class="stat-card stat-success">
+        <div class="kpi-icon">✅</div>
+        <div class="stat-number">{validCount}</div>
+        <div class="stat-label">{labels.progressValidated}</div>
+        <div class="kpi-pct stat-pct-success">{validPercentage}%</div>
+      </div>
+      <div class="stat-card stat-processing">
+        <div class="kpi-icon">◎</div>
+        <div class="stat-number">{processingCount}</div>
+        <div class="stat-label">{processingLabel}</div>
+        <div class="kpi-pct stat-pct-processing">{processingPercentage}%</div>
+      </div>
+      <div class="stat-card stat-error">
+        <div class="kpi-icon">✕</div>
+        <div class="stat-number">{failedCount}</div>
+        <div class="stat-label">{labels.progressFailedStat}</div>
+        <div class="kpi-pct stat-pct-error">{failedPercentage}%</div>
+      </div>
+      <div class="stat-card stat-remaining">
+        <div class="kpi-icon">─</div>
+        <div class="stat-number">{remainingCount}</div>
+        <div class="stat-label">{remainingLabel}</div>
+        <div class="kpi-pct stat-pct-muted">{remainingPercentage}%</div>
+      </div>
+    </div>
+
+    <!-- Progress bar + status -->
+    <template if:true={importStatus}>
+      <div class="validation-progress-section">
+        <div class="progress-header">
+          <div class="progress-header-left">
+            <template if:true={isImportInProgress}>
+              <span class="status-badge in-progress"><span class="status-dot"></span>{labels.progressInProgress}</span>
+            </template>
+            <template if:true={isImportCompleted}>
+              <span class="status-badge completed"><span class="status-dot"></span>{labels.progressCompleted}</span>
+            </template>
+            <template if:true={isImportFailed}>
+              <span class="status-badge failed"><span class="status-dot"></span>{labels.progressFailed}</span>
+            </template>
+            <template if:true={isImportCancelled}>
+              <span class="status-badge failed"><span class="status-dot"></span>{labels.progressCancelled}</span>
+            </template>
+          </div>
+          <div class="progress-header-right">
+            <template if:true={isImportInProgress}>
+              <button type="button" class="btn btn-ghost btn-sm" onclick={handleCancelValidation}>✕ {labels.btnCancel}</button>
+            </template>
+            <template if:true={canRetryValidation}>
+              <button type="button" class="btn btn-outline btn-sm" onclick={handleRetryValidation}>↺ {labels.btnRetry}</button>
+            </template>
+          </div>
+        </div>
+
+        <div class="prog-meta">
+          <span class="prog-meta-label">{processedCount} / {totalRecordsToProcess} lignes ({importProgressPercentage}%)</span>
+          <span class="prog-meta-right">{importStatus}</span>
+        </div>
+        <div class="prog-bar">
+          <div class="prog-fill" style={progressFillStyle}></div>
+        </div>
+
+        <template if:true={importMessage}>
+          <div class="message-box">
+            <span>ℹ</span>
+            <span>{importMessage}</span>
+          </div>
+        </template>
+        <template if:true={currentExecutionId}>
+          <div class="execution-id">
+            <span>{labels.progressExecutionId}</span>
+            <code>{currentExecutionId}</code>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- Validation Report -->
+    <template if:true={showValidationSection}>
+      <template if:true={validationExecuted}>
+        <template if:true={hasIssues}>
+          <div class="error-details-section">
+            <h2 class="results-title">{labels.reportTitle}</h2>
+
+            <div class="error-filters">
+              <!-- Tab strip -->
+              <div class="error-tabs">
+                <button type="button" class={errorsTabClass} data-tab="errors" onclick={handleTabClick}>
+                  {labels.tabErrors}
+                  <span class="error-tab-badge">{errorsCount}</span>
+                </button>
+                <button type="button" class={warningsTabClass} data-tab="warnings" onclick={handleTabClick}>
+                  {labels.tabWarnings}
+                  <span class="error-tab-badge">{warningsCount}</span>
+                </button>
+                <button type="button" class={allTabClass} data-tab="all" onclick={handleTabClick}>
+                  {labels.tabAll}
+                  <span class="error-tab-badge">{issuesCount}</span>
+                </button>
+              </div>
+
+              <div class="filter-controls">
+                <div class="search-container">
+                  <div class="search-sm">
+                    <span>🔍</span>
+                    <input type="search" placeholder={labels.searchPlaceholder}
+                      value={searchTerm} onchange={handleSearchChange} />
+                  </div>
+                </div>
+
+                <select class="type-select" onchange={handleFilterChange}>
+                  <template for:each={errorTypeOptionsWithSelected} for:item="o">
+                    <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+                  </template>
+                </select>
+              </div>
+            </div>
+
+            <div class="issues-summary">
+              <strong>Total Issues Found: {displayedIssuesCount}</strong>
+              <template if:true={hasPartialIssuesLoaded}>
+                <span class="issues-summary-note">(showing partial results from {issuesCount} total)</span>
+              </template>
+              <template if:true={searchTerm}>
+                <span class="issues-summary-note">(Filtered)</span>
+              </template>
+            </div>
+
+            <!-- Aurora error table -->
+            <div class="aurora-table-wrap">
+              <table class="aurora-table">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" onchange={handleSelectAll} /></th>
+                    <th>{labels.colLevel}</th>
+                    <th>{labels.colRow}</th>
+                    <th>{labels.colField}</th>
+                    <th>{labels.colType}</th>
+                    <th>{labels.colMessage}</th>
+                    <th>{labels.colActions}</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <template for:each={paginatedIssues} for:item="issue">
+                    <tr key={issue.id}>
+                      <td>
+                        <input type="checkbox"
+                          data-error-id={issue.id}
+                          onchange={handleErrorSelect}
+                          checked={issue.isSelected} />
+                      </td>
+                      <td>
+                        <span class={issue.levelClass}>{issue.issueLevel}</span>
+                      </td>
+                      <td>
+                        <template if:true={issue.lineNumber}>
+                          <span class="row-link">Row {issue.lineNumber}</span>
+                        </template>
+                        <template if:false={issue.lineNumber}>—</template>
+                      </td>
+                      <td class="field-cell">{issue.fieldApiName}</td>
+                      <td>
+                        <span class="error-type-badge" data-error-type={issue.errorType}>{issue.errorType}</span>
+                      </td>
+                      <td class="msg-cell">{issue.errorMessage}</td>
+                      <td>
+                        <div class="table-actions">
+                          <button type="button" class="btn-tbl-action" onclick={handleEditError} data-error-id={issue.id} title="Edit">✎</button>
+                          <button type="button" class="btn-tbl-action del" onclick={handleDeleteError} data-error-id={issue.id} title="Delete">✕</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+
+                  <template if:true={hasNoIssuesToDisplay}>
+                    <tr>
+                      <td colspan="7" class="table-empty-cell">{labels.noIssues}</td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <template if:true={hasMultiplePages}>
+              <div class="aurora-pagination">
+                <p class="pagination-info">
+                  {labels.paginationShowing} {startRecord} {labels.paginationTo} {endRecord} {labels.paginationOf} {filteredIssues.length} {labels.paginationIssues}
+                </p>
+                <div class="pagination-btns">
+                  <button type="button" class="pg-btn" onclick={handlePreviousPage} disabled={isFirstPage}>← {labels.paginationPrevious}</button>
+                  <template for:each={pageButtons} for:item="p">
+                    <button key={p.number} type="button" class={p.btnClass} data-page={p.number} onclick={handlePageChange}>{p.number}</button>
+                  </template>
+                  <button type="button" class="pg-btn" onclick={handleNextPage} disabled={isLastPage}>{labels.paginationNext} →</button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <!-- No issues -->
+        <template if:false={hasIssues}>
+          <div class="no-issues-card">
+            <div class="no-issues-inner">
+              <span class="no-issues-icon">✓</span>
+              <h2 class="no-issues-text">{labels.noErrors}</h2>
+            </div>
+          </div>
+        </template>
+      </template>
+    </template>
+
+    <!-- Spinner -->
+    <template if:true={isLoading}>
+      <div class="spinner-wrap">
+        <div class="drv-spinner"></div>
+      </div>
+    </template>
+
+    <!-- Navigation -->
+    <div class="action-buttons-section">
+      <div class="action-buttons-content">
+        <button type="button" class="btn btn-outline" onclick={handlePreviousStep} disabled={isLoading}>← {labels.btnBack}</button>
+        <div class="action-buttons-right">
+          <button type="button" class="btn btn-ghost" onclick={handleSkipErrors} disabled={isLoading}>{labels.btnSkip}</button>
+          <button type="button" class="btn btn-primary" onclick={handleNextStep} disabled={isProceedDisabled}>{labels.btnProceed} →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <template if:true={isSettingsOpen}>
+    <section class="drv-modal-backdrop" role="presentation">
+      <div class="drv-modal" role="dialog" aria-modal="true" aria-label={labels.settingsTitle}>
+        <header class="drv-modal__header">
+          <h2>{labels.settingsTitle}</h2>
+        </header>
+        <div class="drv-modal__body settings-body">
+          <div class="settings-grid">
+
+            <!-- Mode -->
+            <div class="settings-card">
+              <div class="settings-title">{labels.settingsMode}</div>
+              <label class="settings-label">{labels.settingsModeLabel}</label>
+              <select class="settings-select" name="mode" onchange={handleSettingChange}>
+                <template for:each={modeOptionsWithSelected} for:item="o">
+                  <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+                </template>
+              </select>
+
+              <template if:true={isPartialOrSample}>
+                <div class="range-inputs">
+                  <div class="range-input">
+                    <label class="settings-label">From line</label>
+                    <input type="number" class="settings-input" name="fromLine" min="1"
+                      value={settings.fromLine} onchange={handleSettingChange} disabled={isLoading} />
+                  </div>
+                  <div class="range-input">
+                    <label class="settings-label">To line</label>
+                    <input type="number" class="settings-input" name="toLine" min="1"
+                      value={settings.toLine} onchange={handleSettingChange} disabled={isLoading} />
+                  </div>
+                </div>
+                <div class="settings-help">
+                  Validate only the rows between "From line" and "To line" (inclusive). Line 1 = first data row after the header.
+                </div>
+              </template>
+              <template if:false={isPartialOrSample}>
+                <div class="settings-help">{labels.settingsSampleHelp}</div>
+              </template>
+            </div>
+
+            <!-- Performance -->
+            <div class="settings-card">
+              <div class="settings-title">{labels.settingsPerformance}</div>
+              <label class="settings-label">{labels.settingsAsync}</label>
+              <input type="number" class="settings-input" name="asyncThreshold"
+                value={settings.asyncThreshold} onchange={handleSettingChange} />
+              <label class="settings-label" style="margin-top:10px">{labels.settingsPageSize}</label>
+              <select class="settings-select" name="pageSize" onchange={handleSettingChange}>
+                <template for:each={pageSizeOptionsWithSelected} for:item="o">
+                  <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+                </template>
+              </select>
+              <div class="settings-help">{labels.settingsPerfHelp}</div>
+            </div>
+
+            <!-- Behavior -->
+            <div class="settings-card">
+              <div class="settings-title">{labels.settingsBehavior}</div>
+              <label class="settings-check-label">
+                <input type="checkbox" name="includeWarnings"
+                  checked={settings.includeWarnings} onchange={handleSettingChange} />
+                {labels.settingsWarnings}
+              </label>
+              <label class="settings-check-label">
+                <input type="checkbox" name="stopOnFirstErrorClientSide"
+                  checked={settings.stopOnFirstErrorClientSide} onchange={handleSettingChange} />
+                {labels.settingsStop}
+              </label>
+              <label class="settings-label" style="margin-top:10px">{labels.settingsDefaultTab}</label>
+              <select class="settings-select" name="defaultTab" onchange={handleSettingChange}>
+                <template for:each={tabOptionsWithSelected} for:item="o">
+                  <option key={o.value} value={o.value} selected={o.isSelected}>{o.label}</option>
+                </template>
+              </select>
+              <div class="settings-help">{labels.settingsBehaviorHelp}</div>
+            </div>
+          </div>
+        </div>
+        <footer class="drv-modal__footer">
+          <button type="button" class="btn btn-outline" onclick={closeSettings}>{labels.btnClose}</button>
+        </footer>
+      </div>
+    </section>
+  </template>
+</template>

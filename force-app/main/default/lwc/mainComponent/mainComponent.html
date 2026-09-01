@@ -1,0 +1,228 @@
+<!--
+  @description       : Main component hosting all ImportMate application components
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified Date  : 22/04/2026
+  @Last modification by : Mouhamed NIANG
+  @Modification : add project name on csv uploader , transformation ,dry run validator & execution    step
+-->
+<template>
+  <template if:true={isLoading}>
+    <div class="main-spinner-overlay">
+      <div class="main-spinner"></div>
+    </div>
+  </template>
+
+  <div class="app-wrapper">
+    <!-- App Header (Aurora dark navbar — prototype: .header) -->
+    <c-app-header-cmp
+      active-page={activePage}
+      onnavigation={handleNavigation}
+    ></c-app-header-cmp>
+
+    <div class="app-layout" role="main" aria-label="ImportMate project interface">
+      <!-- Sidebar -->
+      <c-side-bar-cmp
+        active-page={activePage}
+        current-step={currentStep}
+        steps={baseSteps}
+        current-project={currentProject}
+        onstepchange={handleSidebarStepClick}
+        onquickaction={handleQuickAction}
+      ></c-side-bar-cmp>
+
+      <!-- Main Content Area -->
+      <div class="main-content">
+
+        <!-- Project Context Bar — visible on all pages when a project is active -->
+        <template if:true={currentProject}>
+          <div class="project-context-bar">
+            <span class="project-context-bar__icon">📁</span>
+            <span class="project-context-bar__label">Projet actif :</span>
+            <span class="project-context-bar__name">{currentProject.Name}</span>
+            <template if:true={currentProject.TargetObject__c}>
+              <span class="project-context-bar__sep">·</span>
+              <span class="project-context-bar__icon">☁</span>
+              <span class="project-context-bar__object">{currentProject.TargetObject__c}</span>
+            </template>
+          </div>
+        </template>
+
+        <!-- Analytics View -->
+        <template if:true={showAnalytics}>
+          <div class="content-container">
+            <c-analytics-cmp></c-analytics-cmp>
+          </div>
+        </template>
+
+        <!-- Execution History View -->
+        <template if:true={showExecutionHistory}>
+          <div class="content-container">
+            <c-import-history onnewimportproject={openProjectForm}>
+            </c-import-history>
+          </div>
+        </template>
+
+        <!-- Dashboard View -->
+        <template if:true={showDashboard}>
+          <div class="content-container">
+             <!-- <c-import-history onnewimportproject={openProjectForm}>
+            </c-import-history> -->
+             <c-dashboard-cmp
+              onnewproject={openNewProject}
+              onprojectselect={handleProjectSelect}
+              onprojectedit={handleEditProject}
+            ></c-dashboard-cmp>
+          </div>
+        </template>
+
+        <!-- Schedule View -->
+        <template if:true={showSchedule}>
+          <div class="content-container">
+            <c-schedule-page 
+                project-id={currentProject.Id} 
+                project-name={currentProject.Name}>
+            </c-schedule-page>
+          </div>
+        </template>
+
+        <!-- Projects Workflow View -->
+        <template if:false={showDashboard}>
+          <div class="content-container">
+
+            <!-- <div class="container"> -->
+              <!-- Step 1: Project Setup -->
+
+                <template if:true={showCreatorSection}>
+                  <c-project-form-component
+                    recent-projet={currentProject}
+                    onsave={handleCreateProject}
+                    oncancel={handleCancel}
+                    onprojectnamechange={handleProjectNameChange}
+                    ondescriptionchange={handleDescriptionChange}
+                    ontargetobjectchange={handleTargetObjectChange}
+                    onprevious={handleBackToStep}
+                  ></c-project-form-component>
+                </template>
+
+              <!-- Step 2: Data Source Selection -->
+              <template if:true={showDataSourceSelection}>
+                <c-data-source
+                  current-project={currentProject}
+                  onsourceselected={handleDataSourceSelected}
+                  onprevious={handleBackToStep}
+                ></c-data-source>
+              </template>
+
+              <!-- Step 2: CSV Uploader -->
+              <template if:true={showCsvUploader}>
+                <c-csv-uploader
+                  project-name={currentProject.Name}
+                  project-id={currentProject.Id}
+                  oncsvloaded={handleCsvLoaded}
+                  ongotomapping={handleStartMapping}
+                  onprevious={handleBackToDataSourceSelection}
+                ></c-csv-uploader>
+              </template>
+
+              <!-- Step 2: SOQL Builder -->
+              <template if:true={showSoqlBuilder}>
+                <c-soql-builder
+                  project-target-object={soqlBuilderTargetObject}
+                  project-name={currentProjectName}
+                  onstartmapping={handleStartMapping}
+                  onprevious={handleBackToDataSourceSelection}
+                ></c-soql-builder>
+              </template>
+
+              <!-- Step 3 & 4: Field Mapping & Transformations -->
+              <template if:true={isMappingAndTransformation}>
+                <c-field-mapper
+                  preselected-project-id={currentProject.Id}
+                  preselected-target-object={mappingTargetObject}
+                  source-columns-csv={mappingHeadersCsv}
+                  csv-data={csvData}
+                  onprevious={handleBackToStep}
+                  oncontinue={handleContinueFromFieldMapper}
+                ></c-field-mapper>
+
+              </template>
+
+              <!-- Step 4: Transformations -->
+              <template if:true={isTransformations}>
+                <c-transformation-page
+                  onprevious={handleBackToStep}
+                  onnext={handleNextStep}
+                  project-id={currentProject.Id}
+                  project-name={currentProject.Name}
+                ></c-transformation-page>
+              </template>
+
+              <!-- Step 5: Validation (Dry Run) -->
+              <template if:true={isDryRunExecution}>
+                <c-dry-run-validator
+                  project-id={currentProject.Id}
+                  csv-data={csvData}
+                  project-name={currentProject.Name}
+                  onprevious={handleBackToStep}
+                  onnext={handleNextStep}
+                ></c-dry-run-validator>
+              </template>
+
+              <!-- Step 6: Execution & scheduling-->
+              <template if:true={isRealExecution}>
+                <c-execution-cmp
+                  project-id={currentProject.Id}
+                  project-name={currentProject.Name}
+                  csv-data={csvData}
+                  onprevious={handleBackToStep}
+                ></c-execution-cmp>
+              </template>
+
+              <!-- Step 7: Scheduling -->
+              <template if:true={isScheduling}>
+                <c-schedule-page 
+                  project-id={currentProject.Id} 
+                  project-name={currentProject.Name}
+                  onprevious={handleBackToStep}>
+                </c-schedule-page>
+              </template>
+            <!-- </div> -->
+          </div>
+        </template>
+
+      </div>
+    </div>
+  </div>
+
+   <!-- Modal Edit Project -->
+<template if:true={showProjectForm}>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+
+            <!-- Header -->
+            <header class="slds-modal__header">
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                    title="Close" onclick={closeForm}>✕
+                </button>
+                <h2 class="slds-modal__title">{modal_edit_title }</h2>
+            </header>
+
+            <!-- Body -->
+            <div class="slds-modal__content slds-p-around_medium">
+              <c-project-form-component
+                  project-name={projectName}
+                  description={description}
+                  target-object={targetObject}
+                  open-modal={showEditProjectModal} 
+                  oncancel={closeForm}
+                  onsave={handleUpdateProject}
+                  onprojectnamechange={handleProjectNameChange}
+                  ondescriptionchange={handleDescriptionChange}
+                  ontargetobjectchange={handleTargetObjectChange}>
+              </c-project-form-component>
+            </div>
+          
+        </div>
+    </section>
+</template>
