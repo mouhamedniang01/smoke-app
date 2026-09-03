@@ -1,56 +1,73 @@
-# This file is used for Git repositories to specify intentionally untracked files that Git should ignore. 
-# If you are not using git, you can delete this file. For more information see: https://git-scm.com/docs/gitignore
-# For useful gitignore templates see: https://github.com/github/gitignore
-
-# Salesforce cache
-.sf/
+```
+# Salesforce DX
 .sfdx/
-.localdevserver/
-deploy-options.json
+.forceignore
 
-# LWC VSCode autocomplete
-**/lwc/jsconfig.json
-
-# LWC Jest coverage reports
-coverage/
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Dependency directories
+# Dependencies
 node_modules/
 
-# Eslint cache
-.eslintcache
+# Logs
+*.log
 
-# MacOS system files
-.DS_Store
-
-# Windows system files
-Thumbs.db
-ehthumbs.db
-[Dd]esktop.ini
-$RECYCLE.BIN/
-
-# Local environment variables
+# Environment variables
 .env
+.env.local
+*.env.*
 
-# Python Salesforce Functions
-**/__pycache__/
-**/.venv/
-**/venv/
-<<<<<<< HEAD
+# OS generated files
+.DS_Store
+Thumbs.db
 
-<<<<<<< HEAD
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
 
-#vscode
-=======
-# Vs code 
->>>>>>> f61d39d76052d3bf877b76fb8a62acc707ec3f49
-.vscode
-=======
->>>>>>> origin/develop2
+# Build outputs
+dist/
+build/
+target/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+```
